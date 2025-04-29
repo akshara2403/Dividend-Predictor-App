@@ -144,9 +144,10 @@ if st.button("🔍 Fetch & Predict"):
         stock = yf.Ticker(ticker_input)
 
         # Use older-style quarterly attributes
-        income_raw = stock.quarterly_income_stmt
-        balance_raw = stock.quarterly_balance_sheet
-        cashflow_raw = stock.quarterly_cashflow
+        income_raw = stock.get_income_stmt(freq="quarterly")
+        balance_raw = stock.get_balance_sheet(freq="quarterly")
+        cashflow_raw = stock.get_cash_flow(freq="quarterly")
+
 
         # Show raw results for debugging
         st.write("🧾 Income Statement Shape:", income_raw.shape)
