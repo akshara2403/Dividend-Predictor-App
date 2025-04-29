@@ -142,10 +142,13 @@ def safe_div(a, b):
 if st.button("🔍 Fetch & Predict"):
     try:
         stock = yf.Ticker(ticker_input)
-        income_raw = stock.get_income_stmt(freq="quarterly")
-        balance_raw = stock.get_balance_sheet(freq="quarterly")
-        cashflow_raw = stock.get_cash_flow(freq="quarterly")
 
+        # Use older-style quarterly attributes
+        income_raw = stock.quarterly_income_stmt
+        balance_raw = stock.quarterly_balance_sheet
+        cashflow_raw = stock.quarterly_cashflow
+
+        # Show raw results for debugging
         st.write("🧾 Income Statement Shape:", income_raw.shape)
         st.write("🧾 Balance Sheet Shape:", balance_raw.shape)
         st.write("🧾 Cash Flow Shape:", cashflow_raw.shape)
@@ -185,7 +188,6 @@ if st.button("🔍 Fetch & Predict"):
         st.subheader("📋 Computed Financial Ratios")
         st.dataframe(input_df.T)
 
-        # Model loading and prediction
         sector_key = industry.lower()
         model_paths = {
             "CatBoost": f"models/catboost_model_{sector_key}.pkl",
@@ -197,25 +199,15 @@ if st.button("🔍 Fetch & Predict"):
         with open(model_path, "rb") as f:
             model = pickle.load(f)
 
-        # Prediction and probabilities
         y_pred = model.predict(input_df)
         y_proba = model.predict_proba(input_df)[0]
 
-        label_map = {
-             -1: "📉 Decrease",
-             0: "➖ No Change",
-             1: "📈 Increase"
-        }
-        # Display prediction
+        label_map = {-1: "📉 Decrease", 0: "➖ No Change", 1: "📈 Increase"}
         pred = int(y_pred.flatten()[0]) if hasattr(y_pred, 'flatten') else int(y_pred[0])
         st.success(f"📊 Predicted Dividend Change: *{label_map[pred]}*")
 
-        # Show probabilities as chart
         proba_map = {-1: y_proba[-1], 0: y_proba[0], 1: y_proba[1]}
-        proba_df = pd.DataFrame.from_dict(
-            {label_map[k]: [v] for k, v in proba_map.items()},
-            orient='columns'
-        )
+        proba_df = pd.DataFrame.from_dict({label_map[k]: [v] for k, v in proba_map.items()}, orient='columns')
         st.subheader("🔢 Prediction Probabilities")
         st.bar_chart(proba_df.T.rename(columns={0: "Probability"}))
 
@@ -224,63 +216,13 @@ if st.button("🔍 Fetch & Predict"):
         st.session_state.ticker = ticker_input
         st.session_state.industry = industry
 
-
-        # 🧠 Heuristic GPT-style interpretation
+        # Simple GPT-style explanation
         st.markdown("---")
         st.title("GPT-Style Analysis of Dividend Prediction")
-
-        label = label_map[pred]
         st.markdown(f"### Ticker: `{ticker_input}` | Industry: `{industry}`")
-        st.markdown(f"### 📊 Predicted Dividend Change: **{label}**")
-
-        if label == "📈 Increase":
-            st.success(
-                """The model expects a dividend **increase**. This is likely supported by high profitability indicators such as:
-- Return on Equity (ROE): {:.2f}  
-- Net Profit Margin (NPM): {:.2f}  
-- Free Cash Flow / Operating Cash Flow: {:.2f}
-
-Additionally, liquidity metrics like the Quick Ratio ({:.2f}) and Cash Ratio ({:.2f}) suggest the company is well-positioned to distribute earnings."""
-                .format(
-                    ratios.get('roe', 0),
-                    ratios.get('npm', 0),
-                    ratios.get('fcf_ocf', 0),
-                    ratios.get('quick_ratio', 0),
-                    ratios.get('cash_ratio', 0)
-                )
-            )
-        elif label == "📉 Decrease":
-            st.warning(
-                """The model forecasts a **decrease** in dividends. Possible contributing factors:
-- Interest Coverage Ratio: {:.2f}  
-- Debt/EBITDA: {:.2f}  
-- Debt-to-Equity Ratio: {:.2f}  
-- Weak Profitability (ROE: {:.2f}, NPM: {:.2f})
-
-These suggest financial strain or a conservative capital structure."""
-                .format(
-                    ratios.get('intcov_ratio', 0),
-                    ratios.get('debt_ebitda', 0),
-                    ratios.get('de_ratio', 0),
-                    ratios.get('roe', 0),
-                    ratios.get('npm', 0)
-                )
-            )
-        else:
-            st.info(
-                """The dividend is expected to remain **unchanged**. This likely reflects a stable but conservative financial position:
-- Net Profit Margin: {:.2f}  
-- Return on Assets: {:.2f}  
-- Operating Cash Flow to Long-Term Debt: {:.2f}
-
-These indicators support maintaining, rather than increasing or decreasing, dividend payouts."""
-                .format(
-                    ratios.get('npm', 0),
-                    ratios.get('roa', 0),
-                    ratios.get('ocf_lct', 0)
-                )
-            )
+        st.markdown(f"### 📊 Predicted Dividend Change: **{label_map[pred]}**")
 
     except Exception as e:
         st.error(f"❌ Error during prediction: {e}")
+
 
