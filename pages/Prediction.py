@@ -153,6 +153,9 @@ if st.button("🔍 Fetch & Predict"):
         st.write("🧾 Income Statement Shape:", income_raw.shape)
         st.write("🧾 Balance Sheet Shape:", balance_raw.shape)
         st.write("🧾 Cash Flow Shape:", cashflow_raw.shape)
+        st.write("📄 Raw Income Statement:", income_raw)
+        st.write("📄 Raw Balance Sheet:", balance_raw)
+        st.write("📄 Raw Cash Flow:", cashflow_raw)
 
         if income_raw.empty or balance_raw.empty or cashflow_raw.empty:
             st.error("❌ One or more financial statements are unavailable. Try a different ticker.")
