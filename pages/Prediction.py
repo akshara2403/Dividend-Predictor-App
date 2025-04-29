@@ -142,9 +142,9 @@ def safe_div(a, b):
 if st.button("🔍 Fetch & Predict"):
     try:
         stock = yf.Ticker(ticker_input)
-        income_raw = stock.quarterly_income_stmt
-        balance_raw = stock.quarterly_balance_sheet
-        cashflow_raw = stock.quarterly_cashflow
+        income_raw = stock.get_income_stmt(freq="quarterly")
+        balance_raw = stock.get_balance_sheet(freq="quarterly")
+        cashflow_raw = stock.get_cashflow(freq="quarterly")
 
         st.write("🧾 Income Statement Shape:", income_raw.shape)
         st.write("🧾 Balance Sheet Shape:", balance_raw.shape)
