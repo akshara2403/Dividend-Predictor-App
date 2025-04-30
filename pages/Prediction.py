@@ -110,11 +110,6 @@
 #         st.error(f"❌ Error during prediction: {e}")
 
 
-
-
-#     except Exception as e:
-#         st.error(f"❌ Error during prediction: {e}")
-
 import streamlit as st
 import yfinance as yf
 import pandas as pd
